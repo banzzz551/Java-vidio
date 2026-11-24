@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080d18">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BANZZ Studio">
+<title>BANZZ CODE VIDEO</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="appbar">
+  <div class="brand-mark">B</div>
+  <div class="brand-copy"><div class="brand-name">BANZZ <span>STUDIO</span></div><h1 id="pageTitle">Editor</h1></div>
+  <div class="dev-tag">Dev: <b>banzz</b></div>
+</header>
+
+<main>
+
+  <!-- EDITOR -->
+  <section class="page active" id="page-editor">
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-shapes"></i> Template</div>
+      <div class="select-wrap">
+        <select id="tplSelect" class="field"></select>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+      <p class="note">Pilih template untuk mengisi kode. Kode bisa diedit setelahnya.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-code"></i> Composition</div>
+      <textarea id="code" spellcheck="false"></textarea>
+      <div class="row-actions">
+        <button class="btn outlined" id="reset"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+        <button class="btn outlined" id="exportBtn"><i class="fa-solid fa-file-export"></i> Ekspor</button>
+        <button class="btn outlined" id="importBtn"><i class="fa-solid fa-file-import"></i> Impor</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fa-solid fa-sliders"></i> Props</div>
+        <button class="btn text" id="resetProps"><i class="fa-solid fa-arrow-rotate-left"></i> Default</button>
+      </div>
+      <div id="propsGrid"></div>
+    </div>
+  </section>
+
+  <!-- RENDER -->
+  <section class="page" id="page-render">
+
+    <!-- Riwayat render: hanya tampil saat ada render berjalan atau baru selesai -->
+    <div class="card job-card" id="jobCard" hidden>
+      <div class="card-head">
+        <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat render</div>
+        <button class="btn text" id="hideJob"><i class="fa-solid fa-xmark"></i> Tutup</button>
+      </div>
+      <div id="jobList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-eye"></i> Preview</div>
+      <div class="stage"><canvas id="cv" width="720" height="720"></canvas></div>
+      <div class="actions">
+        <button id="play" class="btn tonal lg"><i class="fa-solid fa-play"></i> Preview</button>
+        <button id="render" class="btn filled lg"><i class="fa-solid fa-clapperboard"></i> Render</button>
+        <button id="stop" class="btn danger lg" style="display:none"><i class="fa-solid fa-stop"></i> Stop</button>
+      </div>
+
+      <div class="warn-banner" id="renderWarn" hidden>
+        <i class="fa-solid fa-hand"></i>
+        <span>Jangan tutup atau tinggalkan aplikasi ini saat render berlangsung. Layar sebaiknya tetap menyala.</span>
+      </div>
+
+      <div class="progress" id="progress">
+        <div class="bar"><span id="bar"></span></div>
+        <div class="progress-text"><span id="ptext">Menyiapkan...</span><span id="ppct">0%</span></div>
+      </div>
+      <div class="result" id="result">
+        <video id="vid" controls playsinline></video>
+        <div class="row-actions">
+          <a id="dl" class="btn filled" download><i class="fa-solid fa-download"></i> Unduh</a>
+          <button id="toGallery" class="btn outlined"><i class="fa-solid fa-photo-film"></i> Galeri</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-music"></i> Audio <span class="opt">(opsional)</span></div>
+      <input type="file" id="audioFile" accept="audio/*" hidden>
+      <div id="audioEmpty">
+        <button class="btn outlined" id="pickAudio"><i class="fa-solid fa-file-audio"></i> Pilih audio</button>
+        <p class="note">Format mp3, wav, m4a, ogg. Maks 60 MB.</p>
+      </div>
+      <div id="audioSet" hidden>
+        <div class="audio-row">
+          <i class="fa-solid fa-compact-disc"></i>
+          <div class="txt">
+            <div class="name" id="audioName"></div>
+            <div class="meta" id="audioMeta"></div>
+          </div>
+          <button class="icon-btn danger" id="clearAudio" title="Hapus audio"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="loop-row">
+          <div>
+            <div class="loop-title">Loop audio</div>
+            <div class="note" id="loopNote"></div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="loopAudio">
+            <span></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-gear"></i> Pengaturan Render</div>
+
+      <div class="group">
+        <div class="label">Resolusi (sisi terpanjang)</div>
+        <div class="chips" data-group="size">
+          <button class="chip" data-value="480">480p</button>
+          <button class="chip active" data-value="720">720p</button>
+          <button class="chip" data-value="1080">1080p</button>
+          <button class="chip" data-value="1440">1440p</button>
+          <button class="chip" data-value="2160">2160p</button>
+        </div>
+        <div class="hint" id="hint"><i class="fa-solid fa-triangle-exclamation"></i> <span></span></div>
+      </div>
+
+      <div class="group">
+        <div class="label">Rasio aspek</div>
+        <div class="chips" data-group="ratio">
+          <button class="chip active" data-value="1:1">1:1</button>
+          <button class="chip" data-value="16:9">16:9</button>
+          <button class="chip" data-value="9:16">9:16</button>
+          <button class="chip" data-value="4:5">4:5</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="label">Kualitas</div>
+        <div class="chips" data-group="quality">
+          <button class="chip" data-value="low">Low</button>
+          <button class="chip active" data-value="medium">Medium</button>
+          <button class="chip" data-value="high">High</button>
+          <button class="chip" data-value="ultra">Ultra</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="label">FPS</div>
+        <div class="chips" data-group="fps">
+          <button class="chip" data-value="24">24</button>
+          <button class="chip active" data-value="30">30</button>
+          <button class="chip" data-value="60">60</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="label">Durasi</div>
+        <div class="chips" data-group="dur">
+          <button class="chip" data-value="3">3 detik</button>
+          <button class="chip active" data-value="5">5 detik</button>
+          <button class="chip" data-value="10">10 detik</button>
+          <button class="chip" data-value="custom"><i class="fa-solid fa-pen"></i> Kustom</button>
+        </div>
+        <div class="custom-dur" id="customRow" style="display:none">
+          <input type="number" id="durInput" class="field" min="0.1" step="0.1" placeholder="detik" value="30">
+          <span>detik</span>
+        </div>
+        <div class="hint" id="durWarn">
+          <i class="fa-solid fa-triangle-exclamation"></i> <span></span>
+        </div>
+      </div>
+
+      <div class="info">
+        <span><b id="dims">720×720</b></span>
+        <span><b id="frames">150</b> frame</span>
+        <span><b id="qLabel">Medium</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALERI -->
+  <section class="page" id="page-gallery">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fa-solid fa-photo-film"></i> Galeri</div>
+        <button class="btn text" id="refreshGallery"><i class="fa-solid fa-arrows-rotate"></i> Muat ulang</button>
+      </div>
+      <p class="note">Video di aplikasi bisa dipindahkan ke penyimpanan HP (Movies/CodeVideo) agar muncul di galeri perangkat.</p>
+    </div>
+    <div id="galleryList" class="gallery"></div>
+  </section>
+
+  <!-- TERSIMPAN -->
+  <section class="page" id="page-saved">
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-floppy-disk"></i> Simpan komposisi</div>
+      <div class="save-row">
+        <input id="saveName" class="field" placeholder="Nama komposisi" maxlength="60">
+        <button class="btn filled" id="saveBtn"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+      </div>
+      <p class="note">Tersimpan di browser perangkat ini. Gunakan Ekspor untuk memindahkannya.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-list"></i> Daftar tersimpan</div>
+      <div id="savedList"></div>
+    </div>
+  </section>
+
+  <!-- DOKUMENTASI -->
+  <section class="page" id="page-docs">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fa-solid fa-book"></i> Dokumentasi</div>
+      </div>
+      <p class="note">Baca dokumentasi di bawah. Salin teks Markdown atau unduh SKILL.md untuk dipakai sebagai skill oleh AI agent.</p>
+      <div class="row-actions">
+        <button class="btn outlined" id="copyDocs"><i class="fa-solid fa-copy"></i> Salin Markdown</button>
+        <a class="btn filled" href="/SKILL.md" download="SKILL.md"><i class="fa-solid fa-download"></i> Unduh SKILL.md</a>
+      </div>
+      <article class="md" id="docView">Memuat dokumentasi...</article>
+    </div>
+  </section>
+
+  <footer class="brand-footer"><span></span><b>BANZZ STUDIO</b><i>•</i> Dev: banzz<span></span></footer>
+</main>
+
+<nav class="bottomnav" role="tablist">
+  <button class="nav-item active" data-tab="editor"><span class="ind"><i class="fa-solid fa-code"></i></span><span>Editor</span></button>
+  <button class="nav-item" data-tab="render"><span class="ind"><i class="fa-solid fa-clapperboard"></i></span><span>Render</span></button>
+  <button class="nav-item" data-tab="gallery"><span class="ind"><i class="fa-solid fa-photo-film"></i></span><span>Galeri</span></button>
+  <button class="nav-item" data-tab="saved"><span class="ind"><i class="fa-solid fa-floppy-disk"></i></span><span>Simpan</span></button>
+  <button class="nav-item" data-tab="docs"><span class="ind"><i class="fa-solid fa-book"></i></span><span>Docs</span></button>
+</nav>
+
+<div id="snackbars"></div>
+
+<div class="scrim" id="overlay">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dlg-icon" id="mIcon"><i class="fa-solid fa-circle-info"></i></div>
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <input id="mInput" class="field" hidden>
+    <div class="dlg-actions">
+      <button class="btn text" id="mCancel">Batal</button>
+      <button class="btn text" id="mOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="/templates.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
